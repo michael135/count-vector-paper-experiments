@@ -11,7 +11,7 @@ class DataLoader(object):
     """
     Handling the data for training the network.
     """
-    def __init__(self, data, labels=None):
+    def __init__(self, data):
         self.train_data = data['data_train']
         self.train_label = data['label_train']
         self.test_data = data['data_test']
