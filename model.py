@@ -129,16 +129,16 @@ def train(data, lr=0.001, epochs=50, batch_train=1024, batch_test=1024,
     biases = tf.Variable(tf.random_normal([n_classes]))
 
     if not inception:
-        model = create_net(x1, z1, hidden_units, weights, biases, keep_prob, bidirectional, concat)
+        logits = create_net(x1, z1, hidden_units, weights, biases, keep_prob, bidirectional, concat)
     else:
-        model = create_inception_like(x1, x2, x3, z1, z2, z3, hidden_units, weights, biases, keep_prob, concat)
+        logits = create_inception_like(x1, x2, x3, z1, z2, z3, hidden_units, weights, biases, keep_prob, concat)
 
     l2_regularization =  beta * tf.reduce_sum(tf.nn.l2_loss(weights))
-    softmax = tf.nn.softmax_cross_entropy_with_logits(logits=model, labels=y)
+    softmax = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y)
     cost = tf.reduce_mean(softmax) + l2_regularization
     optimizer = tf.train.AdamOptimizer(learning_rate=lr).minimize(cost)
 
-    correct_pred = tf.equal(tf.argmax(model, 1), tf.argmax(y, 1))
+    correct_pred = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
     loss = []
@@ -163,32 +163,23 @@ def train(data, lr=0.001, epochs=50, batch_train=1024, batch_test=1024,
                     (epoch + 1, epochs, np.mean(loss), np.mean(acc)))
 
                 loss, acc = [], []
+                predictions, true_labels = [], []
                 for _x1, _y, _z1 in data_load.loader(batch_test, phase='test'):
                     _x2, _z2 = data_load.scale_normalize(_x1, t=2)
                     _x3, _z3 = data_load.scale_normalize(_x1, t=3)
                     feed_dict = {x1: _x1, x2: _x2, x3: _x3, z1: _z1, z2: _z2, z3: _z3, y: _y, keep_prob: 1.}
-                    acc_, loss_ = sess.run([accuracy, cost], feed_dict=feed_dict)
+                    acc_, loss_, predictions_ = sess.run([accuracy, cost, logits], feed_dict=feed_dict)
                     acc.append(acc_)
                     loss.append(loss_)
+                    if epoch == epochs - 1:
+                        predictions.extend(predictions_)
+                        true_labels.extend([np.argmax(label) for label in _y])
+
                 print('** TEST ** [Epoch %i/%i] loss = %.4f, accuracy = %.4f' % (epoch + 1, epochs, np.mean(loss), np.mean(acc)))
                 loss, acc = [], []
 
         print("Optimization Finished!")
         print('Network evaluation begins...')
-        true_labels = []
-        predictions = []
-        for _x1, _y, _z1 in data_load.loader(batch_test, phase='test'):
-            if not inception:
-                feed_dict={x1: _x1, z1: _x1.shape[1] * np.ones(_x1.shape[0], dtype=np.int), keep_prob: 1.}
-            else:
-                _x2, _z2 = data_load.scale_normalize(_x1, t=2)
-                _x3, _z3 = data_load.scale_normalize(_x1, t=3)
-                feed_dict = {x1: _x1, x2: _x2, x3: _x3, z1: _z1, z2: _z2, z3: _z3, keep_prob: 1.}
-            
-            predictions_ = sess.run(model, feed_dict=feed_dict)
-            predictions.extend(predictions_)
-            true_labels.extend([np.argmax(label) for label in _y])
-
         predictions = np.vstack(predictions)
         recall, precision = evaluation(true_labels, predictions)
         print('recall %.3f, precision %.3f' % (recall, precision))
