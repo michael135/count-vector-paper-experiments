@@ -4,13 +4,13 @@ This repository contains the code and part of the data used in the paper *Proces
 
 ## Install requirements
 
-To install tensorflow with GPU support, replace `tensorflow` by `tensorflow-gpu` in `requirements.txt`.
-
 `pip install -r requirements.txt`
+
+To install tensorflow with GPU support, replace `tensorflow` by `tensorflow-gpu` in `requirements.txt`.
 
 ## Unzip the data
 
-`tar -xf data/laboratory_data.bzip2 data/`
+`tar -xf data/laboratory_data.bzip2 -C data/`
 
 Beware that once unzipped, the file weights approximately 1.8gb.
 
