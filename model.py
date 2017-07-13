@@ -179,7 +179,6 @@ def train(data, lr=0.001, epochs=50, batch_train=1024, batch_test=1024,
                 loss, acc = [], []
 
         print("Optimization Finished!")
-        print('Network evaluation begins...')
         predictions = np.vstack(predictions)
         recall, precision = evaluation(true_labels, predictions)
         print('recall %.3f, precision %.3f' % (recall, precision))

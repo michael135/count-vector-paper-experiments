@@ -14,6 +14,6 @@ To install tensorflow with GPU support, replace `tensorflow` by `tensorflow-gpu`
 
 Beware that once unzipped, the file weights approximately 1.8gb.
 
-## Reproduce Laboratory Setup Results
+## Reproduce laboratory setup results
 
 `python train.py data/laboratory_data.pkl`
